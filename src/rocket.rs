@@ -17,7 +17,6 @@ pub struct Rocket {
     position: Vec2,
     angle: f32,
     speed: f32,
-    particles: Vec<Particle>,
     is_alive: bool,
     accelerating_time: f32,
 }
@@ -28,26 +27,20 @@ impl Rocket {
             position,
             angle,
             speed: START_SPEED,
-            particles: vec![],
             is_alive: true,
             accelerating_time: ACCELERATING_TIME,
         }
     }
 
-    fn update_particles(&mut self, dt: f32) {
-        self.particles.retain(|particle| particle.is_alive());
-        self.particles
-            .iter_mut()
-            .for_each(|particle| particle.update(dt));
-
+    pub fn spawn_particle(&self) -> Particle {
         let particle_start = self.position + Vec2::from_angle(self.angle + PI) * HEIGHT / 2.0;
         let particle_angle =
             self.angle + PI + rand::gen_range(-PARTICLE_ANGLE_DIFF, PARTICLE_ANGLE_DIFF);
-        self.particles.push(Particle::new(
+        Particle::new(
             particle_start,
             particle_angle,
             0.1 + rand::gen_range(0.0, 0.1),
-        ));
+        )
     }
 
     pub fn update(&mut self, target: Vec2, dt: f32) {
@@ -74,7 +67,6 @@ impl Rocket {
         }
 
         self.position += Vec2::from_angle(self.angle) * self.speed * dt;
-        self.update_particles(dt);
     }
 
     pub fn draw(&self) {
@@ -89,16 +81,10 @@ impl Rocket {
             2.0,
             BLACK,
         );
-
-        self.particles.iter().for_each(|particle| particle.draw());
     }
 
     pub fn asteroid_collision(&self, asteroid: &Asteroid) -> bool {
         asteroid.position().distance(self.position) <= asteroid.radius() + HEIGHT
-    }
-
-    pub fn particles_count(&self) -> usize {
-        self.particles.len()
     }
 
     pub fn is_alive(&self) -> bool {

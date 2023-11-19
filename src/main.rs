@@ -1,3 +1,4 @@
+use game::Game;
 use macroquad::prelude::*;
 
 mod asteroid;
@@ -7,14 +8,8 @@ mod game;
 mod particle;
 mod ship;
 mod rocket;
-
-use asteroid::Asteroid;
-use bullet::Bullet;
-use explosions::Explosions;
-use game::Game;
-use particle::Particle;
-use ship::Ship;
-use rocket::Rocket;
+mod rockets;
+mod debug;
 
 fn config() -> Conf {
     Conf {

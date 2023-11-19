@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::Particle;
+use crate::particle::Particle;
 
 const PARTICLES_PER_POWER_POINT: usize = 20;
 const PARTICLE_LIFE: f32 = 0.2;

@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::{asteroid::Asteroid, rocket::Rocket, Bullet, Particle};
+use crate::{asteroid::Asteroid, bullet::Bullet, particle::Particle, rocket::Rocket};
 
 const HEIGHT: f32 = 25.0;
 const SHOLDER: f32 = 22.0;
