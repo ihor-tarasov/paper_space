@@ -40,7 +40,7 @@ impl Game {
     fn generate_asteroid(&mut self) {
         if rand::gen_range(0, 100) == 0 {
             let angle = rand::gen_range(0.0, PI * 2.0);
-            let position = Vec2::from_angle(angle) * DISPLAY_SCALE * 2.0;
+            let position = self.ship.position() + Vec2::from_angle(angle) * DISPLAY_SCALE * 2.0;
             let velocity = (self.ship.position() - position).normalize();
             self.asteroids.push(Asteroid::new(position, velocity));
         }
