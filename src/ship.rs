@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::{Bullet, Particle};
+use crate::{Bullet, Particle, asteroid::Asteroid};
 
 const HEIGHT: f32 = 25.0;
 const SHOLDER: f32 = 22.0;
@@ -151,5 +151,9 @@ impl Ship {
 
     pub fn particles_count(&self) -> usize {
         self.particles.len()
+    }
+
+    pub fn asteroid_collision(&self, asteroid: &Asteroid) -> bool {
+        asteroid.position().distance(self.position) <= asteroid.radius() + HEIGHT
     }
 }

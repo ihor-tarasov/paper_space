@@ -33,6 +33,11 @@ async fn main() {
         }
         game.update();
         game.draw();
+
+        if game.is_game_over() {
+            game = Game::new();
+        }
+
         next_frame().await
     }
 }

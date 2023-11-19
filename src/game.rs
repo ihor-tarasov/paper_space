@@ -12,6 +12,7 @@ pub struct Game {
     explosions: Explosions,
     asteroids: Vec<Asteroid>,
     world_camera: Camera2D,
+    is_game_over: bool,
 }
 
 impl Game {
@@ -32,6 +33,7 @@ impl Game {
                 render_target: None,
                 viewport: None,
             },
+            is_game_over: false,
         }
     }
 
@@ -79,6 +81,9 @@ impl Game {
                             .explode(self.asteroids[j].position(), self.asteroids[j].size());
                     }
                 }
+            }
+            if self.ship.asteroid_collision(&self.asteroids[i]) {
+                self.is_game_over = true;
             }
         }
 
@@ -154,5 +159,9 @@ impl Game {
             20.0,
             BLACK,
         );
+    }
+
+    pub fn is_game_over(&self) -> bool {
+        self.is_game_over
     }
 }
