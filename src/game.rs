@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::{Asteroid, Bullet, Explosions, Ship};
+use crate::{Asteroid, Bullet, Explosions, Rocket, Ship};
 
 const DISPLAY_SCALE: f32 = 1000.0;
 
@@ -11,6 +11,7 @@ pub struct Game {
     bullets: Vec<Bullet>,
     explosions: Explosions,
     asteroids: Vec<Asteroid>,
+    rockets: Vec<Rocket>,
     world_camera: Camera2D,
     is_game_over: bool,
 }
@@ -22,6 +23,7 @@ impl Game {
             bullets: Vec::new(),
             explosions: Explosions::new(),
             asteroids: Vec::new(),
+            rockets: Vec::new(),
             world_camera: Camera2D {
                 rotation: 0.0,
                 zoom: vec2(
@@ -40,13 +42,32 @@ impl Game {
     fn generate_asteroid(&mut self) {
         if rand::gen_range(0, 100) == 0 {
             let angle = rand::gen_range(0.0, PI * 2.0);
-            let position = self.ship.position() + Vec2::from_angle(angle) * DISPLAY_SCALE * 2.0;
+            let position = self.ship.position() + Vec2::from_angle(angle) * DISPLAY_SCALE;
             let velocity = (self.ship.position() - position).normalize();
             self.asteroids.push(Asteroid::new(position, velocity));
         }
     }
 
     fn update_game_objects(&mut self, dt: f32) {
+        self.asteroids.sort_by(|a, b| {
+            a.position()
+                .distance(self.ship.position())
+                .total_cmp(&b.position().distance(self.ship.position()))
+        });
+        for i in 0..self.rockets.len() {
+            let target = self
+                .asteroids
+                .get(i)
+                .map(|asteroid| asteroid.position())
+                .unwrap_or(
+                    self.asteroids
+                        .last()
+                        .map(|asteroid| asteroid.position())
+                        .unwrap_or(vec2(0.0, 0.0)),
+                );
+            self.rockets[i].update(target, dt);
+        }
+
         self.ship.update(dt);
         self.bullets.iter_mut().for_each(|bullet| bullet.update(dt));
         self.asteroids
@@ -85,6 +106,14 @@ impl Game {
             if self.ship.asteroid_collision(&self.asteroids[i]) {
                 self.is_game_over = true;
             }
+            self.rockets.iter_mut().for_each(|rocket| {
+                if rocket.asteroid_collision(&self.asteroids[i]) {
+                    self.asteroids[i].destroy(&mut new_asteroids);
+                    self.explosions
+                        .explode(self.asteroids[i].position(), self.asteroids[i].size());
+                    rocket.destroy();
+                }
+            });
         }
 
         self.asteroids.extend(new_asteroids);
@@ -93,6 +122,7 @@ impl Game {
     fn remove_objects(&mut self) {
         self.bullets.retain(|bullet| bullet.alive());
         self.asteroids.retain(|asteroid| asteroid.alive());
+        self.rockets.retain(|rocket| rocket.is_alive());
     }
 
     fn update_camera(&mut self) {
@@ -111,6 +141,9 @@ impl Game {
         if is_key_pressed(KeyCode::M) {
             self.bullets.push(self.ship.fire());
         }
+        if is_key_pressed(KeyCode::N) {
+            self.rockets.push(self.ship.launch_rocket());
+        }
 
         self.update_game_objects(dt);
         self.process_collisions();
@@ -125,6 +158,7 @@ impl Game {
         self.ship.draw();
         self.bullets.iter().for_each(|bullet| bullet.draw());
         self.asteroids.iter().for_each(|asteroid| asteroid.draw());
+        self.rockets.iter().for_each(|rocket| rocket.draw());
         set_default_camera();
 
         draw_text(
@@ -151,11 +185,24 @@ impl Game {
         draw_text(
             format!(
                 "Particles: {}",
-                self.explosions.particles_count() + self.ship.particles_count()
+                self.explosions.particles_count()
+                    + self.ship.particles_count()
+                    + self
+                        .rockets
+                        .iter()
+                        .map(|rocket| rocket.particles_count())
+                        .sum::<usize>()
             )
             .as_str(),
             0.0,
             80.0,
+            20.0,
+            BLACK,
+        );
+        draw_text(
+            format!("Rockets: {}", self.rockets.len()).as_str(),
+            0.0,
+            100.0,
             20.0,
             BLACK,
         );

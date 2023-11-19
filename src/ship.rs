@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::{Bullet, Particle, asteroid::Asteroid};
+use crate::{asteroid::Asteroid, rocket::Rocket, Bullet, Particle};
 
 const HEIGHT: f32 = 25.0;
 const SHOLDER: f32 = 22.0;
@@ -136,6 +136,13 @@ impl Ship {
 
     pub fn fire(&self) -> Bullet {
         Bullet::new(
+            self.position + Vec2::from_angle(self.angle) * HEIGHT / 2.0,
+            self.angle,
+        )
+    }
+
+    pub fn launch_rocket(&self) -> Rocket {
+        Rocket::new(
             self.position + Vec2::from_angle(self.angle) * HEIGHT / 2.0,
             self.angle,
         )

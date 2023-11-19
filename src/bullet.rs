@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-const SPEED: f32 = 1000.0;
+const SPEED: f32 = 1500.0;
 const RADIUS: f32 = 2.0;
 const LIFETIME: f32 = 1.0;
 
