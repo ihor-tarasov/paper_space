@@ -15,7 +15,7 @@ pub struct Asteroid {
     angle: f32,
     rotation_speed: f32,
     size: u8,
-    is_destroyed: bool,
+    is_alive: bool,
 }
 
 impl Asteroid {
@@ -26,7 +26,7 @@ impl Asteroid {
             angle: 0.0,
             rotation_speed: rand::gen_range(-MAX_ROTATION_SPEED, MAX_ROTATION_SPEED),
             size: rand::gen_range(1, MAX_ASTEROID_SIZE),
-            is_destroyed: false,
+            is_alive: true,
         }
     }
 
@@ -37,7 +37,7 @@ impl Asteroid {
             angle: 0.0,
             rotation_speed: rand::gen_range(-MAX_ROTATION_SPEED, MAX_ROTATION_SPEED),
             size,
-            is_destroyed: false,
+            is_alive: true,
         }
     }
 
@@ -46,8 +46,8 @@ impl Asteroid {
         self.angle += self.rotation_speed * dt;
     }
 
-    pub fn alive(&self) -> bool {
-        !self.is_destroyed
+    pub fn is_alive(&self) -> bool {
+        self.is_alive
     }
 
     pub fn draw(&self) {
@@ -71,10 +71,10 @@ impl Asteroid {
     }
 
     pub fn destroy(&mut self, new_asteroids: &mut Vec<Asteroid>) {
-        if self.is_destroyed {
+        if !self.is_alive {
             return;
         }
-        self.is_destroyed = true;
+        self.is_alive = false;
         if self.size == 1 {
             return;
         }
@@ -85,7 +85,7 @@ impl Asteroid {
             let angle = angle_offset + (PI * 2.0) / MAX_ASTEROID_SIZE as f32 * i as f32;
             let position =
                 self.position + Vec2::from_angle(angle) * (count as f32 * MIN_RADIUS) * 2.0;
-            let velocity = (position - self.position).normalize() * 100.0;
+            let velocity = (position - self.position).normalize() * MAX_MOVE_SPEED;
             new_asteroids.push(Asteroid::new_smaller(position, velocity, size));
         }
     }

@@ -129,7 +129,7 @@ impl Game {
 
     fn remove_objects(&mut self) {
         self.bullets.retain(|bullet| bullet.alive());
-        self.asteroids.retain(|asteroid| asteroid.alive());
+        self.asteroids.retain(|asteroid| asteroid.is_alive());
     }
 
     fn update_camera(&mut self) {
