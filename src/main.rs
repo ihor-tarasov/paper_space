@@ -24,6 +24,8 @@ fn config() -> Conf {
 async fn main() {
     let mut game = Game::new();
 
+    show_mouse(false);
+
     loop {
         if is_key_pressed(KeyCode::Escape) {
             break;
