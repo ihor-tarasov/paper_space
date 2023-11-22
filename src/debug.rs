@@ -4,8 +4,9 @@ use macroquad::prelude::*;
 
 const TEXT_SIZE: f32 = 20.0;
 const CONSOLE_MAX_LINES: usize = 10;
+const RELOAD_BAR_SIZE: f32 = 100.0;
 
-fn debug_draw_text(text: &str, index: f32) {
+pub fn debug_draw_text(text: &str, index: f32) {
     draw_text(
         text,
         0.0,
@@ -15,19 +16,15 @@ fn debug_draw_text(text: &str, index: f32) {
     );
 }
 
-pub fn print_debug_info(
-    bullets_count: usize,
-    asteroids_count: usize,
-    particles_count: usize,
-    rockets_count: usize,
-    drones_count: usize,
-) {
-    debug_draw_text(format!("FPS: {}", get_fps()).as_str(), 0.0);
-    debug_draw_text(format!("Bullets: {bullets_count}").as_str(), 1.0);
-    debug_draw_text(format!("Asteroids: {asteroids_count}").as_str(), 2.0);
-    debug_draw_text(format!("Particles: {particles_count}",).as_str(), 3.0);
-    debug_draw_text(format!("Rockets: {rockets_count}").as_str(), 4.0);
-    debug_draw_text(format!("Drones: {drones_count}").as_str(), 5.0);
+pub fn draw_info(text: &str, y: f32, reload: f32, reload_max: f32) {
+    draw_text(text, screen_width() - TEXT_SIZE / 2.0 * text.len() as f32, y * TEXT_SIZE, TEXT_SIZE, BLACK);
+    draw_rectangle(
+        screen_width() - RELOAD_BAR_SIZE / reload_max * reload,
+        TEXT_SIZE * y,
+        RELOAD_BAR_SIZE / reload_max * reload,
+        TEXT_SIZE / 2.0,
+        BLACK,
+    );
 }
 
 pub struct Console {

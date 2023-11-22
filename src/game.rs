@@ -5,9 +5,10 @@ use macroquad::prelude::*;
 use crate::{
     asteroid::Asteroid,
     bullet::Bullet,
-    debug::{print_debug_info, Console},
+    debug::{debug_draw_text, Console, draw_info},
     drone::Drone,
     explosions::Explosions,
+    mine::Mine,
     rockets::Rockets,
     ship::Ship,
 };
@@ -16,9 +17,11 @@ const DISPLAY_SCALE: f32 = 1000.0;
 const BULLET_RELOAD: f32 = 0.2;
 const ROCKET_RELOAD: f32 = 0.5;
 const DRONE_RELOAD: f32 = 1.0;
+const MINE_RELOAD: f32 = 0.6;
 const ASTEROID_GENERATE_RATE: f32 = 1.0;
 const DRONE_EXPLOSION_POWER: u8 = 4;
 const ASTEROID_DESPAWN_DISTANCE: f32 = 10000.0;
+const MINE_EXPLOSION_POWER: u8 = 8;
 
 pub struct Game {
     ship: Ship,
@@ -32,6 +35,8 @@ pub struct Game {
     rocket_reload: f32,
     drones: Vec<Drone>,
     drone_reload: f32,
+    mines: Vec<Mine>,
+    mine_reload: f32,
     world_camera: Camera2D,
     console: Console,
     is_game_over: bool,
@@ -51,6 +56,8 @@ impl Game {
             rocket_reload: ROCKET_RELOAD,
             drones: Vec::new(),
             drone_reload: DRONE_RELOAD,
+            mines: Vec::new(),
+            mine_reload: MINE_RELOAD,
             world_camera: Camera2D {
                 rotation: 0.0,
                 zoom: vec2(
@@ -72,7 +79,7 @@ impl Game {
             self.asteroid_generate_time -= dt;
         } else {
             let angle = rand::gen_range(0.0, PI * 2.0);
-            let position = self.ship.position() + Vec2::from_angle(angle) * DISPLAY_SCALE;
+            let position = self.ship.position() + Vec2::from_angle(angle) * DISPLAY_SCALE * 3.0;
             let velocity = (self.ship.position() - position).normalize();
             self.asteroids.push(Asteroid::new(position, velocity));
             self.console.print(format!(
@@ -145,6 +152,21 @@ impl Game {
                     self.asteroids[i].position().y
                 ));
             }
+            for j in 0..self.mines.len() {
+                if self.mines[j].asteroid_collision(&self.asteroids[i]) {
+                    self.asteroids[i].destroy(&mut self.new_asteroids);
+                    self.explosions
+                        .explode(self.asteroids[i].position(), self.asteroids[i].size());
+                    self.explosions
+                        .explode(self.mines[j].position(), MINE_EXPLOSION_POWER);
+                    self.mines[j].destroy();
+                    self.console.print(format!(
+                        "Mine exploded ({}, {}).",
+                        self.mines[j].position().x,
+                        self.mines[j].position().y
+                    ));
+                }
+            }
         }
         for i in 0..self.drones.len() {
             for j in 0..self.drones.len() {
@@ -177,13 +199,14 @@ impl Game {
                 ));
                 false
             }
-        })
+        });
+        self.mines.retain(|mine| mine.is_alive());
     }
 
     fn update_camera(&mut self) {
         self.world_camera.zoom = vec2(
-            1.0 / (DISPLAY_SCALE + self.ship.speed()),
-            (1.0 / (DISPLAY_SCALE + self.ship.speed())) * (screen_width() / screen_height()),
+            1.0 / (DISPLAY_SCALE + self.ship.speed() * 2.0),
+            (1.0 / (DISPLAY_SCALE + self.ship.speed() * 2.0)) * (screen_width() / screen_height()),
         );
         self.world_camera.target = self.ship.position();
     }
@@ -220,6 +243,15 @@ impl Game {
             }
         }
 
+        if self.mine_reload > 0.0 {
+            self.mine_reload -= dt;
+        } else {
+            if is_key_down(KeyCode::V) {
+                self.mines.push(self.ship.spawn_mine());
+                self.mine_reload = MINE_RELOAD;
+            }
+        }
+
         self.update_game_objects(dt);
         self.process_collisions(dt);
         self.remove_objects();
@@ -235,54 +267,30 @@ impl Game {
         self.asteroids.iter().for_each(|asteroid| asteroid.draw());
         self.rockets.draw();
         self.drones.iter().for_each(|drone| drone.draw());
+        self.mines.iter().for_each(|mine| mine.draw());
         set_default_camera();
 
-        draw_text("M - Fire", screen_width() - 10.0 * 8.0, 20.0, 20.0, BLACK);
-        draw_rectangle(
-            screen_width() - 100.0 / BULLET_RELOAD * self.bullet_reload,
-            20.0,
-            100.0 / BULLET_RELOAD * self.bullet_reload,
-            10.0,
-            BLACK,
-        );
-        draw_text(
-            "N - Launch rocket",
-            screen_width() - 10.0 * 17.0,
-            40.0,
-            20.0,
-            BLACK,
-        );
-        draw_rectangle(
-            screen_width() - 100.0 / ROCKET_RELOAD * self.rocket_reload,
-            40.0,
-            100.0 / ROCKET_RELOAD * self.rocket_reload,
-            10.0,
-            BLACK,
-        );
-        draw_text(
-            "B - Spawn drone",
-            screen_width() - 10.0 * 15.0,
-            60.0,
-            20.0,
-            BLACK,
-        );
-        draw_rectangle(
-            screen_width() - 100.0 / DRONE_RELOAD * self.drone_reload,
-            60.0,
-            100.0 / DRONE_RELOAD * self.drone_reload,
-            10.0,
-            BLACK,
-        );
+        draw_info("M - Fire", 1.0, self.bullet_reload, BULLET_RELOAD);
+        draw_info("N - Launch rocket", 2.0, self.rocket_reload, ROCKET_RELOAD);
+        draw_info("B - Spawn drone", 3.0, self.drone_reload, DRONE_RELOAD);
+        draw_info("V - Spawn mine", 4.0, self.mine_reload, MINE_RELOAD);
 
-        print_debug_info(
-            self.bullets.len(),
-            self.asteroids.len(),
-            self.explosions.particles_count()
-                + self.ship.particles_count()
-                + self.rockets.particles_count(),
-            self.rockets.len(),
-            self.drones.len(),
+        debug_draw_text(format!("FPS: {}", get_fps()).as_str(), 0.0);
+        debug_draw_text(format!("Bullets: {}", self.bullets.len()).as_str(), 1.0);
+        debug_draw_text(format!("Asteroids: {}", self.asteroids.len()).as_str(), 2.0);
+        debug_draw_text(
+            format!(
+                "Particles: {}",
+                self.explosions.particles_count()
+                    + self.ship.particles_count()
+                    + self.rockets.particles_count()
+            )
+            .as_str(),
+            3.0,
         );
+        debug_draw_text(format!("Rockets: {}", self.rockets.len()).as_str(), 4.0);
+        debug_draw_text(format!("Drones: {}", self.drones.len()).as_str(), 5.0);
+        debug_draw_text(format!("Mines: {}", self.mines.len()).as_str(), 6.0);
 
         self.console.draw();
     }

@@ -11,6 +11,7 @@ mod rocket;
 mod rockets;
 mod debug;
 mod drone;
+mod mine;
 
 fn config() -> Conf {
     Conf {

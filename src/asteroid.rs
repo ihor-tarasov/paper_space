@@ -6,7 +6,6 @@ const MAX_MOVE_SPEED: f32 = 100.0;
 const MAX_ROTATION_SPEED: f32 = 3.0;
 const MIN_RADIUS: f32 = 25.0;
 const MAX_ASTEROID_SIZE: u8 = 5;
-const DRAW_RADIUS_MULTIPLIER: f32 = 1.3;
 
 #[derive(Clone)]
 pub struct Asteroid {
@@ -54,8 +53,8 @@ impl Asteroid {
         draw_poly_lines(
             self.position.x,
             self.position.y,
-            self.size * 3,
-            self.radius() * DRAW_RADIUS_MULTIPLIER,
+            self.size * 5,
+            self.radius(),
             self.angle.to_degrees(),
             2.0,
             BLACK,
