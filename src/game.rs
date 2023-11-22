@@ -5,7 +5,7 @@ use macroquad::prelude::*;
 use crate::{
     asteroid::Asteroid,
     bullet::Bullet,
-    debug::{debug_draw_text, Console, draw_info},
+    debug::{debug_draw_text, draw_info, Console},
     drone::Drone,
     explosions::Explosions,
     mine::Mine,
@@ -142,6 +142,15 @@ impl Game {
                 &mut self.new_asteroids,
                 &mut self.explosions,
             );
+            for j in 0..self.drones.len() {
+                if self.drones[j].asteroid_collision(&self.asteroids[i], dt) {
+                    self.asteroids[i].destroy(&mut self.new_asteroids);
+                    self.explosions
+                        .explode(self.asteroids[i].position(), self.asteroids[i].size());
+                    self.explosions
+                        .explode(self.drones[j].position(), DRONE_EXPLOSION_POWER);
+                }
+            }
             if self.asteroids[i].position().distance(self.ship.position())
                 >= ASTEROID_DESPAWN_DISTANCE
             {
@@ -172,7 +181,7 @@ impl Game {
             for j in 0..self.drones.len() {
                 if i != j {
                     let position = self.drones[j].position();
-                    self.drones[i].drone_drone_collision(position, dt);
+                    self.drones[i].drone_collision(position, dt);
                 }
             }
         }

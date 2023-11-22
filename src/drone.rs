@@ -5,7 +5,7 @@ use macroquad::prelude::*;
 use crate::{asteroid::Asteroid, bullet::Bullet};
 
 const HALF_SIZE: f32 = 5.0;
-const PROPELLER_RADIUS: f32 = 5.0;
+const PROPELLER_RADIUS: f32 = 7.0;
 const PROPELLER_DISTANCE: f32 = 8.0;
 const PROPELLER_ROTATION_SPEED: f32 = 40.0;
 const MAX_TARGET_OFFSET_DISTANCE: f32 = 300.0;
@@ -239,16 +239,22 @@ impl Drone {
         self.position
     }
 
-    pub fn drone_drone_collision(&mut self, other: Vec2, dt: f32) {
+    pub fn drone_collision(&mut self, other: Vec2, dt: f32) {
         let direction = self.position - other;
         if direction.length() <= PROPELLER_DISTANCE * 4.0 {
-            self.position += direction.normalize()
-                * if self.is_fast_moving {
-                    FAST_MAX_SPEED
-                } else {
-                    MAX_SPEED
-                }
-                * dt;
+            self.position += direction.normalize() * MAX_SPEED * dt;
         }
+    }
+
+    pub fn asteroid_collision(&mut self, asteroid: &Asteroid, dt: f32) -> bool {
+        let direction = self.position - asteroid.position();
+        if direction.length() <= PROPELLER_DISTANCE * 2.0 + asteroid.radius() * 2.0 {
+            self.charge = -1.0;
+            return true;
+        }
+        if direction.length() <= PROPELLER_DISTANCE * 2.0 + asteroid.radius() * 2.0 * 2.0 {
+            self.position += direction.normalize() * MAX_SPEED * dt;
+        }
+        false
     }
 }
