@@ -20,12 +20,14 @@ pub fn print_debug_info(
     asteroids_count: usize,
     particles_count: usize,
     rockets_count: usize,
+    drones_count: usize,
 ) {
     debug_draw_text(format!("FPS: {}", get_fps()).as_str(), 0.0);
     debug_draw_text(format!("Bullets: {bullets_count}").as_str(), 1.0);
     debug_draw_text(format!("Asteroids: {asteroids_count}").as_str(), 2.0);
     debug_draw_text(format!("Particles: {particles_count}",).as_str(), 3.0);
     debug_draw_text(format!("Rockets: {rockets_count}").as_str(), 4.0);
+    debug_draw_text(format!("Drones: {drones_count}").as_str(), 5.0);
 }
 
 pub struct Console {

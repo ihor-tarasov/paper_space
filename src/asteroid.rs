@@ -70,6 +70,10 @@ impl Asteroid {
         self.size as f32 * MIN_RADIUS
     }
 
+    pub fn despawn(&mut self) {
+        self.is_alive = false;
+    }
+
     pub fn destroy(&mut self, new_asteroids: &mut Vec<Asteroid>) {
         if !self.is_alive {
             return;

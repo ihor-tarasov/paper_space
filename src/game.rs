@@ -6,6 +6,7 @@ use crate::{
     asteroid::Asteroid,
     bullet::Bullet,
     debug::{print_debug_info, Console},
+    drone::Drone,
     explosions::Explosions,
     rockets::Rockets,
     ship::Ship,
@@ -13,8 +14,11 @@ use crate::{
 
 const DISPLAY_SCALE: f32 = 1000.0;
 const BULLET_RELOAD: f32 = 0.2;
-const ROCKET_RELOAD: f32 = 1.0;
+const ROCKET_RELOAD: f32 = 0.5;
+const DRONE_RELOAD: f32 = 1.0;
 const ASTEROID_GENERATE_RATE: f32 = 1.0;
+const DRONE_EXPLOSION_POWER: u8 = 4;
+const ASTEROID_DESPAWN_DISTANCE: f32 = 10000.0;
 
 pub struct Game {
     ship: Ship,
@@ -26,6 +30,8 @@ pub struct Game {
     asteroid_generate_time: f32,
     rockets: Rockets,
     rocket_reload: f32,
+    drones: Vec<Drone>,
+    drone_reload: f32,
     world_camera: Camera2D,
     console: Console,
     is_game_over: bool,
@@ -43,6 +49,8 @@ impl Game {
             asteroid_generate_time: ASTEROID_GENERATE_RATE,
             rockets: Rockets::new(),
             rocket_reload: ROCKET_RELOAD,
+            drones: Vec::new(),
+            drone_reload: DRONE_RELOAD,
             world_camera: Camera2D {
                 rotation: 0.0,
                 zoom: vec2(
@@ -83,6 +91,14 @@ impl Game {
             .iter_mut()
             .for_each(|asteroid| asteroid.update(dt));
         self.explosions.update(dt);
+        self.drones.iter_mut().for_each(|drone| {
+            if let Some(bullet) = drone.fire(&self.asteroids) {
+                self.bullets.push(bullet);
+            }
+        });
+        self.drones
+            .iter_mut()
+            .for_each(|drone| drone.update(dt, self.ship.position()));
     }
 
     fn process_collisions(&mut self) {
@@ -119,6 +135,16 @@ impl Game {
                 &mut self.new_asteroids,
                 &mut self.explosions,
             );
+            if self.asteroids[i].position().distance(self.ship.position())
+                >= ASTEROID_DESPAWN_DISTANCE
+            {
+                self.asteroids[i].despawn();
+                self.console.print(format!(
+                    "Asteroid despawned ({}, {}).",
+                    self.asteroids[i].position().x,
+                    self.asteroids[i].position().y
+                ));
+            }
         }
 
         self.asteroids.reserve(self.new_asteroids.len());
@@ -130,6 +156,20 @@ impl Game {
     fn remove_objects(&mut self) {
         self.bullets.retain(|bullet| bullet.alive());
         self.asteroids.retain(|asteroid| asteroid.is_alive());
+        self.drones.retain(|drone| {
+            if drone.is_alive() {
+                true
+            } else {
+                self.explosions
+                    .explode(drone.position(), DRONE_EXPLOSION_POWER);
+                self.console.print(format!(
+                    "Drone destroyed ({}, {}).",
+                    drone.position().x,
+                    drone.position().y
+                ));
+                false
+            }
+        })
     }
 
     fn update_camera(&mut self) {
@@ -163,6 +203,15 @@ impl Game {
             }
         }
 
+        if self.drone_reload > 0.0 {
+            self.drone_reload -= dt;
+        } else {
+            if is_key_down(KeyCode::B) {
+                self.drones.push(self.ship.spawn_drone());
+                self.drone_reload = DRONE_RELOAD;
+            }
+        }
+
         self.update_game_objects(dt);
         self.process_collisions();
         self.remove_objects();
@@ -177,6 +226,7 @@ impl Game {
         self.bullets.iter().for_each(|bullet| bullet.draw());
         self.asteroids.iter().for_each(|asteroid| asteroid.draw());
         self.rockets.draw();
+        self.drones.iter().for_each(|drone| drone.draw());
         set_default_camera();
 
         print_debug_info(
@@ -186,6 +236,7 @@ impl Game {
                 + self.ship.particles_count()
                 + self.rockets.particles_count(),
             self.rockets.len(),
+            self.drones.len(),
         );
 
         self.console.draw();

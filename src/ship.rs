@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-use crate::{asteroid::Asteroid, bullet::Bullet, particle::Particle, rocket::Rocket};
+use crate::{asteroid::Asteroid, bullet::Bullet, drone::Drone, particle::Particle, rocket::Rocket};
 
 const HEIGHT: f32 = 25.0;
 const SHOLDER: f32 = 22.0;
@@ -162,5 +162,9 @@ impl Ship {
 
     pub fn asteroid_collision(&self, asteroid: &Asteroid) -> bool {
         asteroid.position().distance(self.position) <= asteroid.radius() + HEIGHT
+    }
+
+    pub fn spawn_drone(&self) -> Drone {
+        Drone::new(self.position + Vec2::from_angle(self.angle + PI) * HEIGHT * 2.0)
     }
 }

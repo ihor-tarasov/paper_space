@@ -10,6 +10,7 @@ mod ship;
 mod rocket;
 mod rockets;
 mod debug;
+mod drone;
 
 fn config() -> Conf {
     Conf {
