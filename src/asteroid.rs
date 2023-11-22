@@ -79,14 +79,13 @@ impl Asteroid {
             return;
         }
         let count = self.size;
-        let size = count - 1;
         let angle_offset = rand::gen_range(0.0, PI * 2.0);
         for i in 0..count {
             let angle = angle_offset + (PI * 2.0) / MAX_ASTEROID_SIZE as f32 * i as f32;
             let position =
-                self.position + Vec2::from_angle(angle) * (count as f32 * MIN_RADIUS) * 2.0;
+                self.position + Vec2::from_angle(angle) * (count as f32 * MIN_RADIUS);
             let velocity = (position - self.position).normalize() * MAX_MOVE_SPEED;
-            new_asteroids.push(Asteroid::new_smaller(position, velocity, size));
+            new_asteroids.push(Asteroid::new_smaller(position, velocity, 1));
         }
     }
 
