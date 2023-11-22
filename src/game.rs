@@ -101,7 +101,7 @@ impl Game {
             .for_each(|drone| drone.update(dt, self.ship.position()));
     }
 
-    fn process_collisions(&mut self) {
+    fn process_collisions(&mut self, dt: f32) {
         for bullet in &mut self.bullets {
             for asteroid in &mut self.asteroids {
                 if bullet.collision(asteroid.position(), asteroid.radius()) {
@@ -144,6 +144,14 @@ impl Game {
                     self.asteroids[i].position().x,
                     self.asteroids[i].position().y
                 ));
+            }
+        }
+        for i in 0..self.drones.len() {
+            for j in 0..self.drones.len() {
+                if i != j {
+                    let position = self.drones[j].position();
+                    self.drones[i].drone_drone_collision(position, dt);
+                }
             }
         }
 
@@ -213,7 +221,7 @@ impl Game {
         }
 
         self.update_game_objects(dt);
-        self.process_collisions();
+        self.process_collisions(dt);
         self.remove_objects();
         self.update_camera();
     }
@@ -228,6 +236,43 @@ impl Game {
         self.rockets.draw();
         self.drones.iter().for_each(|drone| drone.draw());
         set_default_camera();
+
+        draw_text("M - Fire", screen_width() - 10.0 * 8.0, 20.0, 20.0, BLACK);
+        draw_rectangle(
+            screen_width() - 100.0 / BULLET_RELOAD * self.bullet_reload,
+            20.0,
+            100.0 / BULLET_RELOAD * self.bullet_reload,
+            10.0,
+            BLACK,
+        );
+        draw_text(
+            "N - Launch rocket",
+            screen_width() - 10.0 * 17.0,
+            40.0,
+            20.0,
+            BLACK,
+        );
+        draw_rectangle(
+            screen_width() - 100.0 / ROCKET_RELOAD * self.rocket_reload,
+            40.0,
+            100.0 / ROCKET_RELOAD * self.rocket_reload,
+            10.0,
+            BLACK,
+        );
+        draw_text(
+            "B - Spawn drone",
+            screen_width() - 10.0 * 15.0,
+            60.0,
+            20.0,
+            BLACK,
+        );
+        draw_rectangle(
+            screen_width() - 100.0 / DRONE_RELOAD * self.drone_reload,
+            60.0,
+            100.0 / DRONE_RELOAD * self.drone_reload,
+            10.0,
+            BLACK,
+        );
 
         print_debug_info(
             self.bullets.len(),

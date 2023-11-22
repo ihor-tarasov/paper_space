@@ -141,7 +141,13 @@ impl Drone {
 
     pub fn draw(&self) {
         let chars_count = if self.charge >= 10.0 { 3.0 } else { 2.0 };
-        draw_text(format!("{}%", self.charge as i16).as_str(), self.position.x - (chars_count * 10.0 / 2.0), self.position.y - PROPELLER_DISTANCE * 2.0, 20.0, BLACK);
+        draw_text(
+            format!("{}%", self.charge as i16).as_str(),
+            self.position.x - (chars_count * 10.0 / 2.0),
+            self.position.y - PROPELLER_DISTANCE * 2.0,
+            20.0,
+            BLACK,
+        );
         draw_line(
             self.position.x - HALF_SIZE,
             self.position.y - HALF_SIZE,
@@ -231,5 +237,18 @@ impl Drone {
 
     pub fn position(&self) -> Vec2 {
         self.position
+    }
+
+    pub fn drone_drone_collision(&mut self, other: Vec2, dt: f32) {
+        let direction = self.position - other;
+        if direction.length() <= PROPELLER_DISTANCE * 4.0 {
+            self.position += direction.normalize()
+                * if self.is_fast_moving {
+                    FAST_MAX_SPEED
+                } else {
+                    MAX_SPEED
+                }
+                * dt;
+        }
     }
 }
